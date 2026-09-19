@@ -2,350 +2,289 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#2c3e50">
-  <meta name="description" content="ระบบจัดตารางงานพนักงานรายสัปดาห์">
-  <title>ระบบจัดตารางงานพนักงาน</title>
-
-  <!-- ฟอนต์ Sarabun -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- SheetJS สำหรับ Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
-
+  <title>ระบบจัดตารางงานพนักงานรายสัปดาห์</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- ============================================================
-       HEADER
-       ============================================================ -->
-  <header class="app-header">
-    <div class="header-left">
-      <span class="app-logo">📋</span>
-      <h1 class="app-title">ตารางงานพนักงาน</h1>
-    </div>
-    <button id="btnMenu" class="menu-btn" aria-label="เมนู">☰</button>
+  <!-- ==================== HEADER (sticky) ==================== -->
+  <header id="appHeader" class="app-header">
+    <h1 class="app-title">📅 ระบบจัดตารางงานพนักงานรายสัปดาห์</h1>
+    <!-- ปุ่ม Hamburger แสดงเฉพาะมือถือ: กดเพื่อเปิด/ปิดเมนู Nav -->
+    <button id="btnHamburger" class="hamburger" type="button"
+            aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mainNav">
+      <span></span><span></span><span></span>
+    </button>
   </header>
 
-  <!-- ============================================================
-       MAIN NAVIGATION (6 pages)
-       ============================================================ -->
-  <nav id="mainNav" class="main-nav" role="tablist">
-    <button class="nav-btn active" data-page="schedule" role="tab">
-      <span class="nav-icon">📅</span><span class="nav-text">ตารางงาน</span>
-    </button>
-    <button class="nav-btn" data-page="history" role="tab">
-      <span class="nav-icon">🕓</span><span class="nav-text">ย้อนหลัง</span>
-    </button>
-    <button class="nav-btn" data-page="employees" role="tab">
-      <span class="nav-icon">👤</span><span class="nav-text">พนักงาน</span>
-    </button>
-    <button class="nav-btn" data-page="shifts" role="tab">
-      <span class="nav-icon">⏰</span><span class="nav-text">ผลัด</span>
-    </button>
-    <button class="nav-btn" data-page="summary" role="tab">
-      <span class="nav-icon">📊</span><span class="nav-text">สรุป</span>
-    </button>
-    <button class="nav-btn" data-page="backup" role="tab">
-      <span class="nav-icon">💾</span><span class="nav-text">สำรอง</span>
-    </button>
+  <!-- ==================== NAV 6 ปุ่ม (sticky) ==================== -->
+  <nav id="mainNav" class="main-nav" aria-label="เมนูหลัก">
+    <button type="button" class="nav-btn active" data-page="schedule">ตารางงาน</button>
+    <button type="button" class="nav-btn" data-page="history">ย้อนหลัง</button>
+    <button type="button" class="nav-btn" data-page="employees">พนักงาน</button>
+    <button type="button" class="nav-btn" data-page="shifts">ผลัด</button>
+    <button type="button" class="nav-btn" data-page="summary">สรุป</button>
+    <button type="button" class="nav-btn" data-page="backup">สำรอง/นำเข้า</button>
   </nav>
 
-  <!-- ============================================================
-       TOOLBAR (View Mode + Date Navigation + Toggle Layout)
-       ============================================================ -->
-  <section class="toolbar" id="mainToolbar">
-    <select id="viewMode" class="toolbar-select" aria-label="มุมมอง">
-      <option value="day">รายวัน</option>
-      <option value="week" selected>รายสัปดาห์</option>
-      <option value="month">รายเดือน</option>
-    </select>
-
-    <button id="btnPrev" class="toolbar-btn" aria-label="ก่อนหน้า">◀</button>
-    <span id="dateLabel" class="date-label">--</span>
-    <button id="btnNext" class="toolbar-btn" aria-label="ถัดไป">▶</button>
-    <button id="btnToday" class="toolbar-btn today-btn">วันนี้</button>
-
-    <button id="btnToggleLayout" class="toolbar-btn toggle-btn" title="สลับมุมมองตาราง">
-      🔄 สลับ
-    </button>
-  </section>
-
-  <!-- ============================================================
-       MAIN CONTENT
-       ============================================================ -->
-  <main class="app-main">
-
-    <!-- ---------- Page 1: ตารางงาน ---------- -->
-    <section id="page-schedule" class="page active" role="tabpanel">
-      <div id="scheduleWrapper" class="table-wrapper">
-        <!-- JS จะ render ตารางที่นี่ -->
+  <!-- ==================== TOOLBAR (sticky, แสดงเฉพาะหน้าตารางงาน) ==================== -->
+  <div id="toolbar" class="toolbar">
+    <div class="toolbar-row">
+      <!-- เลือกช่วงเวลา: วัน / สัปดาห์ / เดือน -->
+      <div class="seg" role="group" aria-label="ช่วงเวลาที่แสดง">
+        <button type="button" class="seg-btn" data-view="day">วัน</button>
+        <button type="button" class="seg-btn active" data-view="week">สัปดาห์</button>
+        <button type="button" class="seg-btn" data-view="month">เดือน</button>
       </div>
-    </section>
-
-    <!-- ---------- Page 2: ย้อนหลัง ---------- -->
-    <section id="page-history" class="page" role="tabpanel">
-      <div id="historyWrapper" class="table-wrapper">
-        <!-- JS จะ render ตารางย้อนหลังที่นี่ -->
-      </div>
-    </section>
-
-    <!-- ---------- Page 3: พนักงาน ---------- -->
-    <section id="page-employees" class="page" role="tabpanel">
-      <button class="btn-add" id="btnAddEmployee">
-        <span>➕</span> เพิ่มพนักงาน
+      <!-- สลับมุมมอง (A) แถว=พนักงาน  (B) แถว=ผลัด -->
+      <button id="btnSwapLayout" type="button" class="btn btn-outline">
+        <span aria-hidden="true">⇄</span> สลับมุมมอง
+        <small id="layoutModeLabel" class="layout-mode-label"></small>
       </button>
-      <div id="employeeList" class="card-list">
-        <!-- JS จะ render การ์ดพนักงานที่นี่ -->
-      </div>
+    </div>
+    <div class="toolbar-row">
+      <button id="btnPrev" type="button" class="btn btn-icon" aria-label="ก่อนหน้า">◀</button>
+      <div id="dateLabel" class="date-label" aria-live="polite"></div>
+      <button id="btnNext" type="button" class="btn btn-icon" aria-label="ถัดไป">▶</button>
+      <button id="btnToday" type="button" class="btn btn-outline">วันนี้</button>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN: สลับหน้าด้วย class .active ==================== -->
+  <main id="appMain" class="app-main">
+
+    <!-- ---------- หน้า 1: ตารางงาน ---------- -->
+    <section id="page-schedule" class="page active">
+      <!-- ตารางถูกสร้างด้วย JS (renderSchedule) -->
+      <div id="scheduleWrap" class="table-wrap"></div>
+      <!-- คำอธิบายสีของผลัด -->
+      <div id="shiftLegend" class="legend" aria-label="คำอธิบายผลัด"></div>
     </section>
 
-    <!-- ---------- Page 4: ผลัด ---------- -->
-    <section id="page-shifts" class="page" role="tabpanel">
-      <button class="btn-add" id="btnAddShift">
-        <span>➕</span> เพิ่มผลัด
-      </button>
-      <div id="shiftList" class="card-list">
-        <!-- JS จะ render การ์ดผลัดที่นี่ -->
+    <!-- ---------- หน้า 2: ย้อนหลัง ---------- -->
+    <section id="page-history" class="page">
+      <h2 class="page-title">ดูตารางงานย้อนหลัง</h2>
+      <div class="panel">
+        <div class="form-row">
+          <label for="historyMonth">เดือน</label>
+          <input type="month" id="historyMonth" class="input">
+        </div>
+        <div class="form-row">
+          <label for="historyEmployee">พนักงาน</label>
+          <select id="historyEmployee" class="input">
+            <option value="">ทั้งหมด</option>
+          </select>
+        </div>
+        <button id="btnLoadHistory" type="button" class="btn btn-primary btn-block">ดูย้อนหลัง</button>
       </div>
+      <!-- ผลลัพธ์ (อ่านอย่างเดียว) จัดกลุ่มตามวันที่ -->
+      <div id="historyResult" class="result-list"></div>
     </section>
 
-    <!-- ---------- Page 5: สรุป ---------- -->
-    <section id="page-summary" class="page" role="tabpanel">
-      <div class="summary-controls">
-        <label for="summaryDate" class="summary-label">เลือกวันที่:</label>
-        <input type="date" id="summaryDate" class="summary-date">
-        <button id="btnLoadSummary" class="btn-primary">โหลดสรุป</button>
+    <!-- ---------- หน้า 3: พนักงาน ---------- -->
+    <section id="page-employees" class="page">
+      <div class="page-head">
+        <h2 class="page-title">จัดการพนักงาน</h2>
+        <button id="btnAddEmployee" type="button" class="btn btn-primary">+ เพิ่มพนักงาน</button>
       </div>
-      <div id="summaryContent" class="summary-content">
-        <!-- JS จะ render สรุปที่นี่ -->
-      </div>
+      <div id="employeeList" class="card-list"></div>
     </section>
 
-    <!-- ---------- Page 6: สำรอง/นำเข้า ---------- -->
-    <section id="page-backup" class="page" role="tabpanel">
+    <!-- ---------- หน้า 4: ผลัด ---------- -->
+    <section id="page-shifts" class="page">
+      <div class="page-head">
+        <h2 class="page-title">จัดการผลัด</h2>
+        <button id="btnAddShift" type="button" class="btn btn-primary">+ เพิ่มผลัด</button>
+      </div>
+      <div id="shiftList" class="card-list"></div>
+    </section>
 
-      <div class="backup-section">
-        <h2 class="backup-title">📤 สำรองข้อมูล (Export)</h2>
-        <p class="backup-desc">ดาวน์โหลดข้อมูลทั้งหมดเก็บไว้เป็นไฟล์สำรอง</p>
-        <div class="backup-buttons">
-          <button class="btn-backup json" data-export="json">
-            <span>📄</span> JSON
-          </button>
-          <button class="btn-backup csv" data-export="csv">
-            <span>📊</span> CSV
-          </button>
-          <button class="btn-backup xlsx" data-export="xlsx">
-            <span>📗</span> Excel
-          </button>
+    <!-- ---------- หน้า 5: สรุป ---------- -->
+    <section id="page-summary" class="page">
+      <h2 class="page-title">สรุปการทำงานรายวัน</h2>
+      <div class="panel">
+        <div class="form-row">
+          <label for="summaryDate">วันที่</label>
+          <input type="date" id="summaryDate" class="input">
+        </div>
+        <button id="btnLoadSummary" type="button" class="btn btn-primary btn-block">โหลดสรุป</button>
+      </div>
+      <div id="summaryResult" class="result-list"></div>
+      <div id="summaryTotal" class="summary-total"></div>
+    </section>
+
+    <!-- ---------- หน้า 6: สำรอง / นำเข้า ---------- -->
+    <section id="page-backup" class="page">
+      <h2 class="page-title">สำรองข้อมูล / นำเข้า</h2>
+
+      <div class="panel">
+        <h3 class="panel-title">ส่งออก (Export)</h3>
+        <div class="btn-stack">
+          <button id="btnExportJSON" type="button" class="btn btn-primary btn-block">⬇ ส่งออก JSON</button>
+          <button id="btnExportCSV" type="button" class="btn btn-primary btn-block">⬇ ส่งออก CSV</button>
+          <button id="btnExportXLSX" type="button" class="btn btn-primary btn-block">⬇ ส่งออก Excel (XLSX)</button>
         </div>
       </div>
 
-      <div class="backup-section">
-        <h2 class="backup-title">📥 นำเข้าข้อมูล (Import)</h2>
-        <p class="backup-desc">
-          เลือกไฟล์ .json / .csv / .xlsx เพื่อกู้คืนข้อมูล
-          <br>
-          <small class="warn-text">⚠️ ข้อมูลเดิมจะถูกแทนที่ด้วยข้อมูลจากไฟล์</small>
+      <div class="panel">
+        <h3 class="panel-title">นำเข้า (Import)</h3>
+        <p class="hint">
+          รองรับไฟล์ .json / .csv / .xlsx<br>
+          • JSON: แทนที่ข้อมูลทั้งหมด<br>
+          • CSV: รวมข้อมูล (พนักงานจับคู่ด้วยรหัสหรือชื่อ, ผลัดจับคู่ด้วยรหัส)<br>
+          • XLSX: อ่านจาก 3 ชีต Employees / Shifts / Schedule
         </p>
-        <input type="file" id="importFile" accept=".json,.csv,.xlsx" hidden>
-        <button id="btnImport" class="btn-backup import">
-          <span>📁</span> เลือกไฟล์
-        </button>
-        <div id="importStatus" class="import-status"></div>
+        <label for="importFile" class="btn btn-outline btn-block file-label">📂 เลือกไฟล์นำเข้า</label>
+        <input type="file" id="importFile" class="file-input"
+               accept=".json,.csv,.xlsx,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <div id="importStatus" class="import-status" role="status" aria-live="polite"></div>
       </div>
-
-      <div class="backup-section danger-zone">
-        <h2 class="backup-title">🗑️ ล้างข้อมูลทั้งหมด</h2>
-        <p class="backup-desc">ลบข้อมูลทั้งหมดออกจาก localStorage (ไม่สามารถกู้คืนได้)</p>
-        <button id="btnResetAll" class="btn-backup danger">
-          <span>⚠️</span> ล้างข้อมูล
-        </button>
-      </div>
-
     </section>
 
   </main>
 
-  <!-- ============================================================
-       MODAL: Assign ผลัด
-       ============================================================ -->
-  <div id="modalAssign" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" data-close="modalAssign"></div>
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="assignTitle">มอบหมายผลัด</h3>
-        <button class="modal-close" data-close="modalAssign" aria-label="ปิด">✕</button>
-      </div>
+  <!-- ==================== MODAL: Assign ผลัด (bottom-sheet) ==================== -->
+  <div id="modalAssign" class="modal" role="dialog" aria-modal="true"
+       aria-labelledby="assignTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet">
+      <div class="modal-grip" aria-hidden="true"></div>
+      <h2 id="assignTitle" class="modal-title"></h2>
 
-      <div class="modal-body">
-        <div id="assignBody" class="assign-body">
-          <!-- JS จะ render radio list ที่นี่ -->
+      <form id="assignForm" novalidate>
+        <!-- แสดงเฉพาะเมื่อเปิดจากมุมมอง (B) เพื่อเลือกพนักงาน -->
+        <div id="assignEmployeeRow" class="form-row" hidden>
+          <label for="assignEmployeeSelect">เลือกพนักงาน</label>
+          <select id="assignEmployeeSelect" class="input"></select>
         </div>
 
-        <label id="assignOtWrap" class="assign-ot hidden">
-          <input type="checkbox" id="assignOtCheck">
-          <span>ทำ OT ต่อถึง <span id="assignOtTime">--:--</span> น.</span>
-        </label>
-      </div>
+        <!-- Radio list ของผลัด + ตัวเลือก "ไม่ทำงาน" (สร้างด้วย JS) -->
+        <div id="assignShiftList" class="radio-list" role="radiogroup" aria-label="เลือกผลัด"></div>
 
-      <div class="modal-actions">
-        <button id="btnCopyYesterday" class="btn-secondary full-width">
-          📋 คัดลอกจากเมื่อวาน
+        <!-- checkbox OT: แสดงเมื่อผลัดที่เลือกมี otUntil -->
+        <div id="assignOTRow" class="check-row" hidden>
+          <label class="check-label">
+            <input type="checkbox" id="assignOT">
+            <span id="assignOTLabel">ทำ OT</span>
+          </label>
+        </div>
+
+        <button id="btnCopyYesterday" type="button" class="btn btn-outline btn-block">
+          📋 คัดลอกผลัดจากเมื่อวาน
         </button>
-        <div class="modal-actions-row">
-          <button id="btnCancelAssign" class="btn-cancel">ยกเลิก</button>
-          <button id="btnSaveAssign" class="btn-primary">บันทึก</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       MODAL: Employee Form
-       ============================================================ -->
-  <div id="modalEmployee" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" data-close="modalEmployee"></div>
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="empModalTitle">เพิ่มพนักงาน</h3>
-        <button class="modal-close" data-close="modalEmployee" aria-label="ปิด">✕</button>
-      </div>
-
-      <form id="employeeForm" class="modal-form" autocomplete="off">
-        <input type="hidden" name="id">
-
-        <label class="form-field">
-          <span class="form-label">รหัสพนักงาน <small>(ไม่บังคับ)</small></span>
-          <input type="text" name="code" placeholder="เช่น EMP001" maxlength="20">
-        </label>
-
-        <label class="form-field">
-          <span class="form-label">ชื่อ-สกุล <span class="required">*</span></span>
-          <input type="text" name="fullname" placeholder="เช่น สมชาย ใจดี" required maxlength="80">
-        </label>
-
-        <label class="form-field">
-          <span class="form-label">ตำแหน่ง <span class="required">*</span></span>
-          <input type="text" name="position" placeholder="เช่น พนักงานขาย" required maxlength="60">
-        </label>
-
-        <label class="form-field">
-          <span class="form-label">เบอร์โทรศัพท์ <span class="required">*</span></span>
-          <input type="tel" name="phone" placeholder="เช่น 0812345678" required
-                 inputmode="tel" pattern="[0-9\-\+\s]{6,20}" maxlength="20">
-        </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" data-close="modalEmployee">ยกเลิก</button>
-          <button type="submit" class="btn-primary">บันทึก</button>
+          <button id="btnAssignCancel" type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+          <button id="btnAssignSave" type="submit" class="btn btn-primary">บันทึก</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ============================================================
-       MODAL: Shift Form
-       ============================================================ -->
-  <div id="modalShift" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" data-close="modalShift"></div>
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 id="shiftModalTitle">เพิ่มผลัด</h3>
-        <button class="modal-close" data-close="modalShift" aria-label="ปิด">✕</button>
-      </div>
+  <!-- ==================== MODAL: ฟอร์มพนักงาน (bottom-sheet) ==================== -->
+  <div id="modalEmployee" class="modal" role="dialog" aria-modal="true"
+       aria-labelledby="employeeModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet">
+      <div class="modal-grip" aria-hidden="true"></div>
+      <h2 id="employeeModalTitle" class="modal-title">เพิ่มพนักงาน</h2>
 
-      <form id="shiftForm" class="modal-form" autocomplete="off">
-        <input type="hidden" name="id">
+      <form id="employeeForm" novalidate>
+        <input type="hidden" id="empId">
 
         <div class="form-row">
-          <label class="form-field">
-            <span class="form-label">รหัสผลัด <span class="required">*</span></span>
-            <input type="text" name="code" placeholder="เช่น M" required maxlength="8">
-          </label>
-
-          <label class="form-field">
-            <span class="form-label">ชื่อผลัด</span>
-            <input type="text" name="name" placeholder="เช่น เช้า" maxlength="30">
-          </label>
+          <label for="empCode">รหัสพนักงาน <small>(ไม่บังคับ)</small></label>
+          <input type="text" id="empCode" class="input" maxlength="20" autocomplete="off">
         </div>
-
         <div class="form-row">
-          <label class="form-field">
-            <span class="form-label">เวลาเริ่ม</span>
-            <input type="time" name="startTime">
-          </label>
-
-          <label class="form-field">
-            <span class="form-label">เวลาสิ้นสุด</span>
-            <input type="time" name="endTime">
-          </label>
+          <label for="empName">ชื่อ-สกุล <span class="req">*</span></label>
+          <input type="text" id="empName" class="input" maxlength="80" autocomplete="off" required>
         </div>
-
         <div class="form-row">
-          <label class="form-field">
-            <span class="form-label">เวลาสิ้นสุด OT <small>(ถ้ามี)</small></span>
-            <input type="time" name="otUntil">
-          </label>
-
-          <label class="form-field">
-            <span class="form-label">สีผลัด</span>
-            <input type="color" name="color" value="#3498db" class="color-input">
-          </label>
+          <label for="empPosition">ตำแหน่ง <span class="req">*</span></label>
+          <input type="text" id="empPosition" class="input" maxlength="60" autocomplete="off" required>
         </div>
-
-        <div class="form-check-row">
-          <label class="check-box">
-            <input type="checkbox" name="overnight">
-            <span>ข้ามวัน (สิ้นสุดก่อนเริ่ม)</span>
-          </label>
-
-          <label class="check-box">
-            <input type="checkbox" name="isOff">
-            <span>เป็นผลัด "หยุด" (OFF)</span>
-          </label>
-        </div>
-
-        <div class="shift-preview">
-          <span class="form-label">ตัวอย่าง:</span>
-          <span id="shiftPreviewChip" class="shift-chip" style="background:#3498db;">M</span>
+        <div class="form-row">
+          <label for="empPhone">เบอร์โทร <span class="req">*</span></label>
+          <input type="tel" id="empPhone" class="input" inputmode="tel" maxlength="20" autocomplete="off" required>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" data-close="modalShift">ยกเลิก</button>
-          <button type="submit" class="btn-primary">บันทึก</button>
+          <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึก</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ============================================================
-       MODAL: Confirm
-       ============================================================ -->
-  <div id="modalConfirm" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" data-close="modalConfirm"></div>
-    <div class="modal-box modal-box-sm">
-      <div class="modal-header">
-        <h3>ยืนยันการทำรายการ</h3>
-      </div>
-      <div class="modal-body">
-        <p id="confirmMsg" class="confirm-msg">คุณต้องการดำเนินการนี้หรือไม่?</p>
-      </div>
-      <div class="modal-actions modal-actions-row">
-        <button id="btnConfirmNo" class="btn-cancel">ยกเลิก</button>
-        <button id="btnConfirmYes" class="btn-danger">ยืนยัน</button>
-      </div>
+  <!-- ==================== MODAL: ฟอร์มผลัด (bottom-sheet) ==================== -->
+  <div id="modalShift" class="modal" role="dialog" aria-modal="true"
+       aria-labelledby="shiftModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-sheet">
+      <div class="modal-grip" aria-hidden="true"></div>
+      <h2 id="shiftModalTitle" class="modal-title">เพิ่มผลัด</h2>
+
+      <form id="shiftForm" novalidate>
+        <input type="hidden" id="shiftId">
+
+        <div class="form-row">
+          <label for="shiftName">ชื่อผลัด</label>
+          <input type="text" id="shiftName" class="input" maxlength="40" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <label for="shiftCode">รหัสผลัด <span class="req">*</span></label>
+          <input type="text" id="shiftCode" class="input" maxlength="10" autocomplete="off" required>
+        </div>
+
+        <!-- ส่วนเวลา: ซ่อนได้เมื่อแก้ไขผลัดหยุด (OFF) -->
+        <div id="shiftTimeFields">
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="shiftStart">เวลาเริ่ม</label>
+              <input type="time" id="shiftStart" class="input">
+            </div>
+            <div class="form-row">
+              <label for="shiftEnd">เวลาสิ้นสุด</label>
+              <input type="time" id="shiftEnd" class="input">
+            </div>
+          </div>
+          <div class="check-row">
+            <label class="check-label">
+              <input type="checkbox" id="shiftOvernight">
+              <span>ข้ามวัน</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <label for="shiftOtUntil">เวลา OT ถึง <small>(ไม่บังคับ)</small></label>
+            <input type="time" id="shiftOtUntil" class="input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="shiftColor">สี</label>
+          <input type="color" id="shiftColor" class="input input-color" value="#3498db">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-close-modal>ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึก</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- ============================================================
-       TOAST (แจ้งเตือนเล็กๆ)
-       ============================================================ -->
-  <div id="toast" class="toast hidden"></div>
+  <!-- ข้อความแจ้งสั้น ๆ (toast) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- ==================== SCRIPTS ==================== -->
+  <!-- SheetJS (CDN เดียวที่อนุญาต) ใช้สำหรับ Export/Import Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>
