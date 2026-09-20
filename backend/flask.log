@@ -1,0 +1,11 @@
+nohup: ignoring input
+=======================================================
+🐍  Flask Backend — ระบบจัดตารางงาน
+=======================================================
+  🌐 http://localhost:5000
+  📡 API: /api/employees | /api/shifts | /api/schedule
+=======================================================
+ * Serving Flask app 'app'
+ * Debug mode: on
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
